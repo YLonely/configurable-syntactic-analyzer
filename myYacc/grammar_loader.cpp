@@ -1,11 +1,10 @@
 #include "stdafx.h"
 //Recording the productions that are created.
 production *pro_list = NULL;
-int pro_index = -1;
 
 //Recording the elements that are created.
 element *token_list = NULL;
-int token_index = 0;
+int transfer_index = 0;
 
 
 void token_analyze();
@@ -58,9 +57,8 @@ void token_analyze()
 {
 	match("%token");
 	skip();
-	element *temp = NULL;
-	temp = (element*)calloc(1, sizeof(element));
-	for (int i = 0; file_buff[file_ptr] != ';'; i++, file_ptr++)
+	element *temp = (element*)calloc(1, sizeof(element));
+	for (int i = 0; (file_buff[file_ptr] >= '0' && file_buff[file_ptr] <= '9') || (file_buff[file_ptr] >= 'a' && file_buff[file_ptr] <= 'z') || (file_buff[file_ptr] >= 'A' && file_buff[file_ptr] <= 'Z') || file_buff[file_ptr] == '_' || file_buff[file_ptr] == ',' ; i++, file_ptr++)
 	{
 
 		if (file_buff[file_ptr] == ',')
@@ -69,21 +67,16 @@ void token_analyze()
 			i = -1;
 			temp->is_terminator = TRUE;
 			temp->next = NULL;
-			temp->type.t_index = token_index;
+			temp->type.t_index = transfer_index;
 			add_t(temp);
 			temp = (element*)calloc(1, sizeof(element));
-		}
-
-		//We can record the name of tokens when necessary.
-		/*
-		else
+		} else
 			temp->terminator_name[i] = file_buff[file_ptr];
-		*/
 	}
 	file_ptr++;
 	temp->is_terminator = TRUE;
 	temp->next = NULL;
-	temp->type.t_index = token_index;
+	temp->type.t_index = transfer_index;
 	add_t(temp);
 
 	match(";");
@@ -91,8 +84,15 @@ void token_analyze()
 
 void pro_analyze()
 {
+	int ptr_temp;
 	match("{");
+	skip();
+	ptr_temp = file_ptr;
+	production *temp = (production*)calloc(1, sizeof(production));
+	for (int i = 0; (file_buff[file_ptr] >= '0' && file_buff[file_ptr] <= '9') || (file_buff[file_ptr] >= 'a' && file_buff[file_ptr] <= 'z') || (file_buff[file_ptr] >= 'A' && file_buff[file_ptr] <= 'Z') || file_buff[file_ptr] == '_' || file_buff[file_ptr] == ':' || file_buff[file_ptr] == '|' || file_buff[file_ptr] == ';'; i++, file_ptr++)
+	{
 
+	}
 	match("}");
 }
 
@@ -125,7 +125,7 @@ void add_t(element *e)
 		for (; temp->next != NULL; temp = temp->next);
 		temp->next = e;
 	}
-	token_index++;
+	transfer_index++;
 }
 
 /*
@@ -141,7 +141,7 @@ void add_p(production *p)
 		for (; temp->next != NULL; temp = temp->next);
 		temp->next = p;
 	}
-	pro_index--;
+	transfer_index++;
 }
 
 
