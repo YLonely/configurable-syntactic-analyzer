@@ -33,6 +33,9 @@
     <ClInclude Include="myexception.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="grammar_loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -45,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="myexception.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="grammar_loader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

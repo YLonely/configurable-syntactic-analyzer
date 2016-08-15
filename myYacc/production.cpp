@@ -7,24 +7,26 @@
 void element_add(element *e1, element *e2)
 {
 	element *temp = NULL;
+	element *temp_ptr = e2;
 	if (e1 == NULL)
 	{
-		exception("Empty e1 param error");
+		exception("Empty e1 param error", NULL);
 		return;
 	}
 	if (e2 == NULL)
 	{
-		e2 = (element*)malloc(sizeof(element*));
+		e2 = (element*)calloc(1, sizeof(element));
 		e2->is_terminator = e1->is_terminator;
 		e2->type = e1->type;
 		e2->next = NULL;
 	} else
 	{
-		temp = (element*)malloc(sizeof(element*));
+		temp = (element*)calloc(1, sizeof(element));
 		temp->is_terminator = e1->is_terminator;
 		temp->type = e1->type;
 		temp->next = NULL;
-		e2->next = temp;
+		for (; temp_ptr->next != NULL; temp_ptr = temp_ptr->next);
+		temp_ptr->next = temp;
 	}
 }
 

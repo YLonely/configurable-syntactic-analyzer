@@ -4,5 +4,7 @@
 
 
 #define EMPTY -1
-#define  STR_END -2
+#define  STRING_END 0
+
+#define FILE_LOAD_MAX 1024
 typedef int boolean;

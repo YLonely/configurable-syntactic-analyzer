@@ -1,2 +1,2 @@
 #pragma once
-void exception(char *e);
+void exception(char *e, char *detail);

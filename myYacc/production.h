@@ -3,8 +3,11 @@
 struct _production
 {
 	char head[20];
+	int p_index;
 	struct _item *items;
 	struct _element *look_ahead;
+	//Only used for recording a list of productions.
+	struct _production *next;
 };
 
 struct _item
@@ -18,10 +21,11 @@ struct _element
 {
 	union
 	{
-		int terminator;
+		int t_index;
 		struct _production *pro;
 	}type;
 	boolean is_terminator;
+	char terminator_name[20];
 	struct _element *next;
 };
 
@@ -44,3 +48,6 @@ typedef struct _element element;
 typedef struct _item item;
 typedef struct _production production;
 typedef struct _set set;
+
+
+element* first(element *e);

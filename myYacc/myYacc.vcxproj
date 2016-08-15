@@ -142,12 +142,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constant.h" />
+    <ClInclude Include="grammar_loader.h" />
     <ClInclude Include="myexception.h" />
     <ClInclude Include="production.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="grammar_loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="myexception.cpp" />
     <ClCompile Include="production.cpp" />

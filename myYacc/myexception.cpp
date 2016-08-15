@@ -1,12 +1,16 @@
 #include "myexception.h"
 #include "stdio.h"
 
-void exception(char *e)
+void exception(char *e, char *detail)
 {
 	if (e == NULL)
-		exception("Empty exception param error");
+		exception("Empty exception param error", NULL);
 	else
 	{
-		printf("%s", e);
+		if (detail == NULL)
+		{
+			printf("%s", e);
+		} else
+			printf("%s Info:%s", e, detail);
 	}
 }
