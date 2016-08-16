@@ -5,7 +5,6 @@ struct _production
 	char head[20];
 	int p_index;
 	struct _item *items;
-	struct _element *look_ahead;
 	//Only used for recording a list of productions.
 	struct _production *next;
 };
@@ -14,6 +13,7 @@ struct _item
 {
 	struct _element *ele;
 	int dot_pos;
+	struct _element *look_ahead;
 	struct _item *next;
 };
 
