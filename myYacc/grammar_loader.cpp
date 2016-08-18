@@ -4,6 +4,9 @@ production *pro_list = NULL;
 
 //Recording the elements that are created.
 element *token_list = NULL;
+int token_num = 0;
+
+
 int transfer_index = 0;
 
 char current_str[64];
@@ -14,7 +17,7 @@ int match(char *s);
 void add_t(element *e);
 void add_p(production *p);
 int is_contain(char *key);
-void* find(char *key);
+void* find_by_key(char *key);
 item* items_analyze();
 int advance();
 void space_skip();
@@ -59,17 +62,33 @@ void grammar_load(FILE *fp)
 void token_analyze()
 {
 	space_skip();
-	element *temp = NULL;
+	element *e = NULL;
+	/*
+		Add STRING_END and EMPTY token first
+	*/
+	e = (element*)calloc(1, sizeof(element));
+	e->is_terminator = TRUE;
+	e->type.t_index = transfer_index;
+	strcpy(e->terminator_name, "EMPTY");
+	add_t(e);
+
+	e = (element*)calloc(1, sizeof(element));
+	e->is_terminator = TRUE;
+	e->type.t_index = transfer_index;
+	strcpy(e->terminator_name, "STRING_END");
+	add_t(e);
+
+
 
 	while (TRUE)
 	{
 		advance();
-		temp = (element*)calloc(1, sizeof(element));
-		temp->is_terminator = TRUE;
-		temp->next = NULL;
-		temp->type.t_index = transfer_index;
-		strcpy(temp->terminator_name, current_str);
-		add_t(temp);
+		e = (element*)calloc(1, sizeof(element));
+		e->is_terminator = TRUE;
+		//temp->next = NULL;
+		e->type.t_index = transfer_index;
+		strcpy(e->terminator_name, current_str);
+		add_t(e);
 		if (file_buff[file_ptr] == ';')
 			break;
 		else
@@ -83,30 +102,27 @@ void pro_analyze()
 	//int ptr_temp;
 	int contain;
 	//ptr_temp = file_ptr;
-	production *temp = (production*)calloc(1, sizeof(production));
+	production *p = (production*)calloc(1, sizeof(production));
 	production *temp_p = NULL;
-	while (TRUE)
+	space_skip();
+	while (advance())
 	{
-		space_skip();
-		if (file_buff[file_ptr] == '}')
-			break;
-		advance();
-		contain = is_contain(temp->head);
+		contain = is_contain(p->head);
 		if (!contain)
 		{
-			strcpy(temp->head, current_str);
-			temp->p_index = transfer_index;
+			strcpy(p->head, current_str);
+			p->p_index = transfer_index;
 			if (!match(":"))
 			{
 				getchar();
 				exit(0);
 			}
-			temp->items = items_analyze();
-			add_p(temp);
-			temp = (production*)calloc(1, sizeof(production));
+			p->items = items_analyze();
+			add_p(p);
+			p = (production*)calloc(1, sizeof(production));
 		} else
 		{
-			temp_p = (production*)find(temp->head);
+			temp_p = (production*)find_by_key(p->head);
 			if (!match(":"))
 			{
 				getchar();
@@ -114,6 +130,7 @@ void pro_analyze()
 			}
 			temp_p->items = items_analyze();
 		}
+		space_skip();
 	}
 	match("}");
 }
@@ -148,6 +165,7 @@ void add_t(element *e)
 		temp->next = e;
 	}
 	transfer_index++;
+	token_num++;
 }
 
 /*
@@ -166,30 +184,51 @@ void add_p(production *p)
 	transfer_index++;
 }
 
-void* find(char *key)
+void* find_by_key(char *key)
 {
-	production *temp_p = pro_list;
-	element *temp_e = token_list;
+	production *p = pro_list;
+	element *e = token_list;
 	element *temp = NULL;
-	for (; temp_p; temp_p = temp_p->next)
+	for (; p; p = p->next)
 	{
-		if (!strcmp(temp_p->head, key))
-			return temp_p;
+		if (!strcmp(p->head, key))
+			return p;
 	}
 
-	for (; temp_e; temp_e = temp_e->next)
+	for (; e; e = e->next)
 	{
-		if (!strcmp(temp_e->terminator_name, key))
+		if (!strcmp(e->terminator_name, key) && e->is_terminator)
 		{
 			temp = (element*)calloc(1, sizeof(element));
 			temp->is_terminator = TRUE;
-			temp->next = NULL;
-			temp->type.t_index = temp_e->type.t_index;
-			strcpy(temp->terminator_name, temp_e->terminator_name);
+			//temp->next = NULL;
+			temp->type.t_index = e->type.t_index;
+			strcpy(temp->terminator_name, e->terminator_name);
 			return temp;
 		}
 	}
+	return NULL;
 }
+
+element* find_by_index(int index)
+{
+	element *e = token_list;
+	element *temp = NULL;
+	for (; e; e = e->next)
+	{
+		if ((e->type.t_index == index&&e->is_terminator) || e->type.pro->p_index == index)
+		{
+			temp = (element*)calloc(1, sizeof(element));
+			temp->is_terminator = e->is_terminator;
+			//temp->next = NULL;
+			temp->type = e->type;
+			strcpy(temp->terminator_name, e->terminator_name);
+			return temp;
+		}
+	}
+	return NULL;
+}
+
 
 
 /*
@@ -223,6 +262,7 @@ item* items_analyze()
 		{
 			temp->next = (item*)calloc(1, sizeof(item));
 			temp = temp->next;
+			file_ptr++;
 		} else if (file_buff[file_ptr] == ';')
 			return first_item;
 		else
@@ -243,17 +283,17 @@ element* elements_analyze()
 	production* temp_p = NULL;
 	int contain;
 	while (advance())
-	{	
+	{
 		contain = is_contain(current_str);
 		if (contain == TOKEN)
 		{
 			if (first_element == NULL)
 			{
-				first_element = (element*)find(current_str);
+				first_element = (element*)find_by_key(current_str);
 				temp_e = first_element;
 			} else
 			{
-				temp_e->next = (element*)find(current_str);
+				temp_e->next = (element*)find_by_key(current_str);
 				temp_e = temp_e->next;
 			}
 
@@ -262,14 +302,14 @@ element* elements_analyze()
 			if (first_element == NULL)
 			{
 				first_element = (element*)calloc(1, sizeof(element));
-				first_element->is_terminator = FALSE;
-				first_element->type.pro = (production*)find(current_str);
+				//first_element->is_terminator = FALSE;
+				first_element->type.pro = (production*)find_by_key(current_str);
 				temp_e = first_element;
 			} else
 			{
 				temp_e->next = (element*)calloc(1, sizeof(element));
-				temp_e->next->is_terminator = FALSE;
-				temp_e->next->type.pro = (production*)find(current_str);
+				//temp_e->next->is_terminator = FALSE;
+				temp_e->next->type.pro = (production*)find_by_key(current_str);
 				temp_e = temp_e->next;
 			}
 		} else
@@ -316,4 +356,31 @@ int advance()
 void space_skip()
 {
 	for (; file_buff[file_ptr] == ' ' || file_buff[file_ptr] == '\n' || file_buff[file_ptr] == '\t' || file_buff[file_ptr] == '\r'; file_ptr++);
+}
+
+
+
+/*
+	Release the mem of list.
+*/
+void mem_release()
+{
+	production *p = pro_list;
+	element *e = token_list;
+	production *temp_p = NULL;
+	element *temp_e = NULL;
+
+	while (p)
+	{
+		temp_p = p;
+		p = p->next;
+		free(temp_p);
+	}
+
+	while (e)
+	{
+		temp_e = e;
+		e = e->next;
+		free(temp_e);
+	}
 }

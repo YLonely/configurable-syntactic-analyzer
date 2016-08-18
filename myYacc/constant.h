@@ -3,8 +3,8 @@
 #define FALSE 0
 
 
-#define EMPTY -2
-#define  STRING_END -1
+#define EMPTY 0
+#define STRING_END 1
 
 #define TOKEN 1
 #define	PRODUCTION	2
