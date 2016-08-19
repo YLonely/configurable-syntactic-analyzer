@@ -1,5 +1,4 @@
-#include "myexception.h"
-#include "stdio.h"
+#include "stdafx.h"
 
 void exception(char *e, char *detail)
 {

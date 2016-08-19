@@ -9,5 +9,7 @@
 #define TOKEN 1
 #define	PRODUCTION	2
 
+#define BODY_LENGTH 20
+
 #define FILE_LOAD_MAX 1024
 typedef int boolean;

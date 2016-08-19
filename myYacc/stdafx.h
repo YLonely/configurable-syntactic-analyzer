@@ -15,6 +15,7 @@
 #include "string.h"
 #include "myexception.h"
 #include "grammar_loader.h"
+#include "yacc.h"
 
 
 // TODO:  在此处引用程序需要的其他头文件

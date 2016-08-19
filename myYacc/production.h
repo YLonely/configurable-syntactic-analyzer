@@ -12,6 +12,8 @@ struct _item
 {
 	struct _element *ele;
 	struct _item *next;
+	int *body;
+	int body_len;
 };
 
 struct _element
@@ -30,7 +32,7 @@ struct _element
 typedef struct _n_pro
 {
 	int head;
-	int *body;//int array.
+	int *body;
 	int body_len;
 	int look_ahead;
 	int dot_pos;
@@ -63,3 +65,4 @@ typedef struct _production production;
 typedef struct _set set;
 
 
+set* closure(n_pro *pro);

@@ -55,7 +55,8 @@ void grammar_load(FILE *fp)
 	else
 	{
 		exception("Illegal grammar form error", "grammar_load");
-		return;
+		getchar();
+		exit(0);
 	}
 }
 
@@ -78,23 +79,22 @@ void token_analyze()
 	strcpy(e->terminator_name, "STRING_END");
 	add_t(e);
 
-
-
-	while (TRUE)
+	while (advance())
 	{
-		advance();
 		e = (element*)calloc(1, sizeof(element));
 		e->is_terminator = TRUE;
 		//temp->next = NULL;
 		e->type.t_index = transfer_index;
 		strcpy(e->terminator_name, current_str);
 		add_t(e);
-		if (file_buff[file_ptr] == ';')
-			break;
-		else
-			file_ptr++;
 	}
-	match(";");
+	if (!match(";"))
+	{
+		exception("Illegal grammar form error", "token_analyze");
+		getchar();
+		exit(0);
+	}
+
 }
 
 void pro_analyze()
@@ -114,6 +114,7 @@ void pro_analyze()
 			p->p_index = transfer_index;
 			if (!match(":"))
 			{
+				exception("Illegal grammar form error", "pro_analyze");
 				getchar();
 				exit(0);
 			}
@@ -125,6 +126,7 @@ void pro_analyze()
 			temp_p = (production*)find_by_key(p->head);
 			if (!match(":"))
 			{
+				exception("Illegal grammar form error", "pro_analyze");
 				getchar();
 				exit(0);
 			}
@@ -138,11 +140,13 @@ void pro_analyze()
 int match(char *s)
 {
 	int length = strlen(s);
+	int temp = file_ptr;
 	for (int i = 0; i < length; i++, file_ptr++)
 	{
 		if (file_buff[file_ptr] != s[i])
 		{
-			exception("Match error", s);
+			//exception("Match error", s);
+			file_ptr = temp;
 			return 0;
 		}
 	}
@@ -210,25 +214,6 @@ void* find_by_key(char *key)
 	return NULL;
 }
 
-element* find_by_index(int index)
-{
-	element *e = token_list;
-	element *temp = NULL;
-	for (; e; e = e->next)
-	{
-		if ((e->type.t_index == index&&e->is_terminator) || e->type.pro->p_index == index)
-		{
-			temp = (element*)calloc(1, sizeof(element));
-			temp->is_terminator = e->is_terminator;
-			//temp->next = NULL;
-			temp->type = e->type;
-			strcpy(temp->terminator_name, e->terminator_name);
-			return temp;
-		}
-	}
-	return NULL;
-}
-
 
 
 /*
@@ -251,6 +236,20 @@ int is_contain(char *key)
 	return 0;
 }
 
+void item_body_count(item *t)
+{
+	int body_len;
+	element *e = t->ele;
+	for (body_len = 0; e; e = e->next, body_len++)
+	{
+		if (e->is_terminator)
+			t->body[body_len] = e->type.t_index;
+		else
+			t->body[body_len] = e->type.pro->p_index;
+	}
+	t->body_len = body_len;
+}
+
 item* items_analyze()
 {
 	item* first_item = (item*)calloc(1, sizeof(item));
@@ -258,12 +257,13 @@ item* items_analyze()
 	while (TRUE)
 	{
 		temp->ele = elements_analyze();
-		if (file_buff[file_ptr] == '|')
+		temp->body = (int*)calloc(20, sizeof(int));
+		item_body_count(temp);
+		if (match("|"))
 		{
 			temp->next = (item*)calloc(1, sizeof(item));
 			temp = temp->next;
-			file_ptr++;
-		} else if (file_buff[file_ptr] == ';')
+		} else if (match(";"))
 			return first_item;
 		else
 		{
