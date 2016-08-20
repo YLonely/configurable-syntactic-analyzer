@@ -52,8 +52,8 @@ struct _set
 	//A table that records the transfer path when the set read a terminator 
 	int *transfer_table;
 
-	//The total number of productions in the set
-	int list_len;
+	//The total number of kernel productions.
+	int kernel_num;
 
 	struct _set *next;
 };
@@ -65,4 +65,5 @@ typedef struct _production production;
 typedef struct _set set;
 
 
-set* closure(n_pro *pro);
+int first(int first_index, int sec_index, int *first_arr);
+void* find_by_index(int index, int *type);
