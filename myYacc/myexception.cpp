@@ -12,4 +12,6 @@ void exception(char *e, char *detail)
 		} else
 			printf("%s Info:%s", e, detail);
 	}
+	getchar();
+	exit(0);
 }

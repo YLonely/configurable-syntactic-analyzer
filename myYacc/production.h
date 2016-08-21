@@ -49,13 +49,15 @@ struct _set
 
 	n_pro *pro_list;
 
-	//A table that records the transfer path when the set read a terminator 
+	/*
+	A table that records the transfer path when the set read a terminator 
+	In this table,0 means matching error and 1 means match successfully.
+	*/
 	int *transfer_table;
 
 	//The total number of kernel productions.
 	int kernel_num;
 
-	struct _set *next;
 };
 
 

@@ -7,7 +7,7 @@ element *token_list = NULL;
 int token_num = 0;
 
 
-int transfer_index = 0;
+int transfer_index = -1;
 
 char current_str[64];
 
@@ -23,15 +23,12 @@ int advance();
 void space_skip();
 element* elements_analyze();
 
-int file_load(char *buff, FILE *fp)
+void file_load(char *buff, FILE *fp)
 {
 	int i = fread(buff, sizeof(char), FILE_LOAD_MAX, fp);
 	if (i == FILE_LOAD_MAX)
-	{
 		exception("File load out of range error", NULL);
-		return 0;
-	}
-	return 1;
+
 }
 
 /*
@@ -43,9 +40,7 @@ char *file_buff = NULL;
 void grammar_load(FILE *fp)
 {
 	file_buff = (char*)calloc(FILE_LOAD_MAX, sizeof(char));
-	if (!file_load(file_buff, fp))
-		return;
-
+	file_load(file_buff, fp);
 	space_skip();
 	if (match("%token"))
 		token_analyze();
@@ -53,11 +48,7 @@ void grammar_load(FILE *fp)
 	if (match("{"))
 		pro_analyze();
 	else
-	{
 		exception("Illegal grammar form error", "grammar_load");
-		getchar();
-		exit(0);
-	}
 }
 
 void token_analyze()
@@ -89,11 +80,7 @@ void token_analyze()
 		add_t(e);
 	}
 	if (!match(";"))
-	{
 		exception("Illegal grammar form error", "token_analyze");
-		getchar();
-		exit(0);
-	}
 
 }
 
@@ -113,11 +100,7 @@ void pro_analyze()
 			strcpy(p->head, current_str);
 			p->p_index = transfer_index;
 			if (!match(":"))
-			{
 				exception("Illegal grammar form error", "pro_analyze");
-				getchar();
-				exit(0);
-			}
 			p->items = items_analyze();
 			add_p(p);
 			p = (production*)calloc(1, sizeof(production));
@@ -125,11 +108,8 @@ void pro_analyze()
 		{
 			temp_p = (production*)find_by_key(p->head);
 			if (!match(":"))
-			{
 				exception("Illegal grammar form error", "pro_analyze");
-				getchar();
-				exit(0);
-			}
+
 			temp_p->items = items_analyze();
 		}
 		space_skip();
@@ -266,11 +246,7 @@ item* items_analyze()
 		} else if (match(";"))
 			return first_item;
 		else
-		{
 			exception("Illegal grammar form error", "items_analyze");
-			getchar();
-			exit(0);
-		}
 	}
 
 }

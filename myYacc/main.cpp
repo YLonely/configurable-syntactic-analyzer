@@ -6,6 +6,7 @@
 
 int main()
 {
+	yacc_init("D:/Personal/Desktop/yacc.txt");
     return 0;
 }
 
