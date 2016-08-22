@@ -7,7 +7,7 @@ element *token_list = NULL;
 int token_num = 0;
 
 
-int transfer_index = -1;
+int transfer_index = 0;
 
 char current_str[64];
 
@@ -78,6 +78,7 @@ void token_analyze()
 		e->type.t_index = transfer_index;
 		strcpy(e->terminator_name, current_str);
 		add_t(e);
+		space_skip();
 	}
 	if (!match(";"))
 		exception("Illegal grammar form error", "token_analyze");
@@ -94,19 +95,19 @@ void pro_analyze()
 	space_skip();
 	while (advance())
 	{
-		contain = is_contain(p->head);
+		contain = is_contain(current_str);
 		if (!contain)
 		{
 			strcpy(p->head, current_str);
 			p->p_index = transfer_index;
 			if (!match(":"))
 				exception("Illegal grammar form error", "pro_analyze");
-			p->items = items_analyze();
 			add_p(p);
+			p->items = items_analyze();
 			p = (production*)calloc(1, sizeof(production));
 		} else
 		{
-			temp_p = (production*)find_by_key(p->head);
+			temp_p = (production*)find_by_key(current_str);
 			if (!match(":"))
 				exception("Illegal grammar form error", "pro_analyze");
 
@@ -130,7 +131,6 @@ int match(char *s)
 			return 0;
 		}
 	}
-	file_ptr++;
 	return 1;
 }
 

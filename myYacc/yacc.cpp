@@ -6,7 +6,7 @@ extern int token_num;
 
 set* sets_arr[100];
 int sets_num = 0;
-
+int ending_set = 0;
 /*
 The closure of one or more kernel productions
 */
@@ -35,6 +35,7 @@ set* closure(set *se)
 			{
 				last_p->next = (n_pro*)malloc(sizeof(n_pro));
 				last_p->next->head = first_p->body[first_p->dot_pos];
+				last_p->next->body = (int*)calloc(BODY_LENGTH, sizeof(int));
 				memcpy(last_p->next->body, t->body, BODY_LENGTH);
 				last_p->next->body_len = t->body_len;
 				last_p->next->dot_pos = 0;
@@ -94,15 +95,6 @@ set* _goto(set *s, int symbol_index)
 	return se;
 }
 
-int is_contain(set *s)
-{
-	for (int i = 0; i < sets_num; i++)
-	{
-		if (setcmp(s, sets_arr[i]))
-			return i;
-	}
-	return -1;
-}
 
 boolean setcmp(set *s1, set *s2)
 {
@@ -121,6 +113,16 @@ boolean setcmp(set *s1, set *s2)
 		}
 	}
 	return TRUE;
+}
+
+int is_contain(set *s)
+{
+	for (int i = 0; i < sets_num; i++)
+	{
+		if (setcmp(s, sets_arr[i]))
+			return i;
+	}
+	return -1;
 }
 
 int add_set(set *s)
@@ -164,18 +166,24 @@ void sets()
 	for (int i = 0; i < sets_num; i++)
 	{
 		closure_s = closure(sets_arr[i]);
-		for (int j = 0; j < transfer_index; j++)
+		for (int j = 1; j < transfer_index; j++)
 		{
 			goto_s = _goto(closure_s, j);
+			if (!goto_s)
+				continue;
 			goto_index = add_set(goto_s);
-			if (!sets_arr[i]->transfer_table[j])
+			if (i == 0 && j == token_num + 1)
+				ending_set = goto_index;
+			if (sets_arr[i]->transfer_table[j])
 				exception("This grammar is not LR(1).", NULL);
 			sets_arr[i]->transfer_table[j] = goto_index + 2;
 			/*
 				Because in the transfer table, 0 means error and 1 means match successfully.
 			*/
+
 		}
 	}
+	sets_arr[ending_set]->transfer_table[STRING_END] = 1;
 
 }
 

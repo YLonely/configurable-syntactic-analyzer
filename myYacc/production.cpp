@@ -8,20 +8,20 @@ int first(int first_index, int sec_index, int *first_arr);
 	Patch two elements together.
 	Patch e1 to the end of the e2.
 */
-void add_e2e(element *e1, element *e2)
+void add_e2e(element *e1, element **e2)
 {
 	element *temp = NULL;
-	element *temp_ptr = e2;
+	element *temp_ptr = *e2;
 	if (e1 == NULL)
 	{
 		exception("Empty e1 param error", NULL);
 		return;
 	}
-	if (e2 == NULL)
+	if (*e2 == NULL)
 	{
-		e2 = (element*)calloc(1, sizeof(element));
-		e2->is_terminator = e1->is_terminator;
-		e2->type = e1->type;
+		*e2 = (element*)calloc(1, sizeof(element));
+		(*e2)->is_terminator = e1->is_terminator;
+		(*e2)->type = e1->type;
 		//e2->next = NULL;
 	} else
 	{
@@ -39,7 +39,7 @@ void add_e2e(element *e1, element *e2)
 	Counting the terminator of FIRST(element)
 	record it in first_elements
 */
-void count_first(element *e, element *first_elements)
+void count_first(element *e, element **first_elements)
 {
 	item *temp;
 	if (!e)
@@ -66,7 +66,7 @@ void* find_by_index(int index, int *type)
 {
 	production *p = pro_list;
 	element *e = token_list;
-	element *temp = NULL;
+	//element *temp = NULL;
 	for (; p; p = p->next)
 	{
 		if (p->p_index == index)
@@ -80,7 +80,7 @@ void* find_by_index(int index, int *type)
 		if (e->type.t_index == index&&e->is_terminator)
 		{
 			*type = TOKEN;
-			return temp;
+			return e;
 		}
 	}
 	return NULL;
@@ -132,8 +132,8 @@ int first(int first_index, int sec_index, int *first_arr)
 		e = find_used_by_first(first_index);
 		e->next = find_used_by_first(sec_index);
 	}
-	count_first(e, first_elements);
-	for (num = 0; temp; temp = temp->next, num++)
+	count_first(e, &first_elements);
+	for (num = 0, temp = first_elements; temp; temp = temp->next, num++)
 		first_arr[num] = temp->type.t_index;
 
 	while (first_elements)
