@@ -20,7 +20,7 @@ int is_contain(char *key);
 void* find_by_key(char *key);
 item* items_analyze();
 int advance();
-void space_skip();
+void blank_skip();
 element* elements_analyze();
 
 void file_load(char *buff, FILE *fp)
@@ -41,10 +41,10 @@ void grammar_load(FILE *fp)
 {
 	file_buff = (char*)calloc(FILE_LOAD_MAX, sizeof(char));
 	file_load(file_buff, fp);
-	space_skip();
+	blank_skip();
 	if (match("%token"))
 		token_analyze();
-	space_skip();
+	blank_skip();
 	if (match("{"))
 		pro_analyze();
 	else
@@ -53,7 +53,7 @@ void grammar_load(FILE *fp)
 
 void token_analyze()
 {
-	space_skip();
+	blank_skip();
 	element *e = NULL;
 	/*
 		Add STRING_END and EMPTY token first
@@ -78,7 +78,7 @@ void token_analyze()
 		e->type.t_index = transfer_index;
 		strcpy(e->terminator_name, current_str);
 		add_t(e);
-		space_skip();
+		blank_skip();
 	}
 	if (!match(";"))
 		exception("Illegal grammar form error", "token_analyze");
@@ -92,7 +92,7 @@ void pro_analyze()
 	//ptr_temp = file_ptr;
 	production *p = (production*)calloc(1, sizeof(production));
 	production *temp_p = NULL;
-	space_skip();
+	blank_skip();
 	while (advance())
 	{
 		contain = is_contain(current_str);
@@ -113,7 +113,7 @@ void pro_analyze()
 
 			temp_p->items = items_analyze();
 		}
-		space_skip();
+		blank_skip();
 	}
 	match("}");
 }
@@ -306,7 +306,7 @@ element* elements_analyze()
 				temp_e = temp_e->next;
 			}
 		}
-		space_skip();
+		blank_skip();
 	}
 	return first_element;
 }
@@ -329,7 +329,7 @@ int advance()
 	return i;
 }
 
-void space_skip()
+void blank_skip()
 {
 	for (; file_buff[file_ptr] == ' ' || file_buff[file_ptr] == '\n' || file_buff[file_ptr] == '\t' || file_buff[file_ptr] == '\r'; file_ptr++);
 }

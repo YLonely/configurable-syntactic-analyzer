@@ -4,17 +4,96 @@ extern element *token_list;
 extern int transfer_index;
 extern int token_num;
 
-set* sets_arr[100];
+set* sets_arr[1000];
 int sets_num = 0;
 int ending_set = 0;
+
+boolean procmp(n_pro *p1, n_pro *p2)
+{
+	if (p1->body_len != p2->body_len || p1->dot_pos != p2->dot_pos || p1->head != p2->head || p1->look_ahead != p2->look_ahead)
+		return FALSE;
+	for (int i = 0; i < p1->body_len; i++)
+	{
+		if (p1->body[i] != p2->body[i])
+			return FALSE;
+	}
+	return TRUE;
+}
+
+
+boolean pro_is_contain(n_pro *pro_list, n_pro *p)
+{
+	n_pro *temp = NULL;
+	for (temp = pro_list; temp; temp = temp->next)
+		if (procmp(temp, p))
+			return TRUE;
+	return FALSE;
+}
+
+char change(int index)
+{
+	switch (index)
+	{
+	case 1:
+		return '$';
+	case 2:
+		return 'a';
+	case  3:
+		return 'b';
+	case  4:
+		return 'c';
+	case 5:
+		return 'd';
+	case 6:
+		return '@';
+	case 7:
+		return 'S';
+	case 8:
+		return 'B';
+	case 9:
+		return 'A';
+	default:
+		break;
+	}
+}
+
+
+
+void test_print(n_pro *temp)
+{
+	int i, j;
+	char str[30];
+	str[0] = change(temp->head);
+	str[1] = '-';
+	str[2] = '>';
+	str[3 + temp->dot_pos] = '.';
+	for (i = 3, j = 0; j < temp->body_len; i++, j++)
+	{
+		if (str[i] == '.')
+		{
+			j--;
+			continue;
+		} else
+			str[i] = change(temp->body[j]);
+	}
+	str[i++] = ',';
+	str[i++] = change(temp->look_ahead);
+	str[i] = 0;
+	printf("%s\n", str);
+}
+
 /*
 The closure of one or more kernel productions
 */
 set* closure(set *se)
 {
+	//int test = 0;
+
 	se->transfer_table = (int*)calloc(transfer_index, sizeof(int));
 	n_pro *first_p = se->pro_list;
 	n_pro *last_p = se->pro_list;
+	n_pro *temp = NULL;
+
 	int type, first_arr_len;
 	//int kernel_num = 1;
 	int *first_arr = (int*)malloc(2 * transfer_index*sizeof(int));
@@ -28,21 +107,35 @@ set* closure(set *se)
 		pvoid = find_by_index(first_p->body[first_p->dot_pos], &type);
 		if (type == TOKEN)
 			continue;
+		first_arr_len = first(first_p->body[first_p->dot_pos + 1], first_p->look_ahead, first_arr);
 		for (t = ((production*)pvoid)->items; t; t = t->next)
 		{
-			first_arr_len = first(first_p->body[first_p->dot_pos + 1], first_p->look_ahead, first_arr);
 			for (int i = 0; i < first_arr_len; i++)
 			{
-				last_p->next = (n_pro*)malloc(sizeof(n_pro));
-				last_p->next->head = first_p->body[first_p->dot_pos];
-				last_p->next->body = (int*)calloc(BODY_LENGTH, sizeof(int));
-				memcpy(last_p->next->body, t->body, BODY_LENGTH);
-				last_p->next->body_len = t->body_len;
-				last_p->next->dot_pos = 0;
-				last_p->next->look_ahead = first_arr[i];
-				last_p->next->next = NULL;
+				temp = (n_pro*)malloc(sizeof(n_pro));
+				temp->head = first_p->body[first_p->dot_pos];
+				temp->body = (int*)calloc(BODY_LENGTH, sizeof(int));
+				memcpy(temp->body, t->body, BODY_LENGTH);
+				temp->body_len = t->body_len;
+				temp->dot_pos = 0;
+				temp->look_ahead = first_arr[i];
+				temp->next = NULL;
+				if (pro_is_contain(se->pro_list, temp))
+				{
+					free(temp->body);
+					free(temp);
+				} else
+				{
+					/*test_print(temp);
+					test++;
+					if (test == 100)
+					{
+						exception("lalala", NULL);
+					}*/
+					last_p->next = temp;
+					last_p = last_p->next;
+				}
 
-				last_p = last_p->next;
 			}
 		}
 	}

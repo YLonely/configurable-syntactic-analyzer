@@ -39,24 +39,40 @@ void add_e2e(element *e1, element **e2)
 	Counting the terminator of FIRST(element)
 	record it in first_elements
 */
-void count_first(element *e, element **first_elements)
+typedef struct _used
+{
+	int use[100];
+	int num;
+}used;
+
+
+void count_first(element *e, element **first_elements, used *is_used)
 {
 	item *temp;
 	if (!e)
 		return;
+	for (int i = 0; i < is_used->num; i++)
+	{
+		if (e->is_terminator&&e->type.t_index == is_used->use[i])
+			return;
+		else if (!e->is_terminator&&e->type.pro->p_index == is_used->use[i])
+			return;
+	}
+
 	if (e->is_terminator)
 	{
+		is_used->use[is_used->num++] = e->type.t_index;
 		add_e2e(e, first_elements);
 	} else
 	{
+		is_used->use[is_used->num++] = e->type.pro->p_index;
 		temp = e->type.pro->items;
-		while (temp)
+		for (; temp; temp = temp->next)
 		{
 			if (temp->ele->is_terminator&&temp->ele->type.t_index == EMPTY)
-				count_first(e->next, first_elements);
+				count_first(e->next, first_elements, is_used);
 			else
-				count_first(temp->ele, first_elements);
-			temp = temp->next;
+				count_first(temp->ele, first_elements, is_used);
 		}
 	}
 }
@@ -120,6 +136,9 @@ element* find_used_by_first(int index)
 */
 int first(int first_index, int sec_index, int *first_arr)
 {
+	used u;
+	u.num = 0;
+
 	element *first_elements = NULL, *e = NULL;
 	element *temp = NULL;
 	int num;
@@ -132,7 +151,7 @@ int first(int first_index, int sec_index, int *first_arr)
 		e = find_used_by_first(first_index);
 		e->next = find_used_by_first(sec_index);
 	}
-	count_first(e, &first_elements);
+	count_first(e, &first_elements, &u);
 	for (num = 0, temp = first_elements; temp; temp = temp->next, num++)
 		first_arr[num] = temp->type.t_index;
 
