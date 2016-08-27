@@ -1,12 +1,18 @@
 #include "stdafx.h"
+#include "lex.h"
+
 extern production *pro_list;
 extern element *token_list;
 extern int transfer_index;
 extern int token_num;
 
+extern int lex_lines;
+
 set* sets_arr[1000];
 int sets_num = 0;
 int ending_set = 0;
+
+char **name_record_arr = NULL;
 
 boolean procmp(n_pro *p1, n_pro *p2)
 {
@@ -30,57 +36,57 @@ boolean pro_is_contain(n_pro *pro_list, n_pro *p)
 	return FALSE;
 }
 
-char change(int index)
-{
-	switch (index)
-	{
-	case 1:
-		return '$';
-	case 2:
-		return 'a';
-	case  3:
-		return 'b';
-	case  4:
-		return 'c';
-	case 5:
-		return 'd';
-	case 6:
-		return '@';
-	case 7:
-		return 'S';
-	case 8:
-		return 'B';
-	case 9:
-		return 'A';
-	default:
-		break;
-	}
-}
+//char change(int index)
+//{
+//	switch (index)
+//	{
+//	case 1:
+//		return '$';
+//	case 2:
+//		return 'a';
+//	case  3:
+//		return 'b';
+//	case  4:
+//		return 'c';
+//	case 5:
+//		return 'd';
+//	case 6:
+//		return '@';
+//	case 7:
+//		return 'S';
+//	case 8:
+//		return 'B';
+//	case 9:
+//		return 'A';
+//	default:
+//		break;
+//	}
+//}
 
 
 
-void test_print(n_pro *temp)
-{
-	int i, j;
-	char str[30];
-	str[0] = change(temp->head);
-	str[1] = '-';
-	str[2] = '>';
-	str[3 + temp->dot_pos] = '.';
-	for (i = 3, j = 0; j < temp->body_len; i++, j++)
-	{
-		if (str[i] == '.')
-		{
-			j--;
-			continue;
-		} else
-			str[i] = change(temp->body[j]);
-	}
-	str[i++] = ',';
-	str[i++] = change(temp->look_ahead);
-	str[i] = 0;
-	printf("%s\n", str);
-}
+//void test_print(n_pro *temp)
+//{
+//	int i, j;
+//	char str[30];
+//	str[0] = change(temp->head);
+//	str[1] = '-';
+//	str[2] = '>';
+//	str[3 + temp->dot_pos] = '.';
+//	for (i = 3, j = 0; j < temp->body_len; i++, j++)
+//	{
+//		if (str[i] == '.')
+//		{
+//			j--;
+//			continue;
+//		} else
+//			str[i] = change(temp->body[j]);
+//	}
+//	str[i++] = ',';
+//	str[i++] = change(temp->look_ahead);
+//	str[i] = 0;
+//	printf("%s\n", str);
+//}
 
 /*
 The closure of one or more kernel productions
@@ -89,7 +95,7 @@ set* closure(set *se)
 {
 	//int test = 0;
 
-	se->transfer_table = (int*)calloc(transfer_index, sizeof(int));
+	//se->transfer_table = (int*)calloc(transfer_index, sizeof(int));
 	n_pro *first_p = se->pro_list;
 	n_pro *last_p = se->pro_list;
 	n_pro *temp = NULL;
@@ -126,12 +132,6 @@ set* closure(set *se)
 					free(temp);
 				} else
 				{
-					/*test_print(temp);
-					test++;
-					if (test == 100)
-					{
-						exception("lalala", NULL);
-					}*/
 					last_p->next = temp;
 					last_p = last_p->next;
 				}
@@ -183,7 +183,14 @@ set* _goto(set *s, int symbol_index)
 		se = (set*)malloc(sizeof(set));
 		se->kernel_num = kernel_num;
 		se->pro_list = first;
-		se->transfer_table = NULL;
+		se->transfer_table = (int*)calloc(transfer_index, sizeof(int));
+
+		temp = first;
+		for (int i = 0; i < kernel_num; i++, temp = temp->next)
+		{
+			if (temp->body_len == temp->dot_pos&&temp->head != token_num)
+				se->transfer_table[temp->look_ahead] = -(i + 1);
+		}
 	}
 	return se;
 }
@@ -222,10 +229,14 @@ int add_set(set *s)
 {
 	int num;
 	if ((num = is_contain(s)) != -1)
+	{
+		free(s->transfer_table);
+		free(s);
 		return num;
+	}
 	sets_arr[sets_num++] = s;
 	if (sets_num > sizeof(sets_arr) / sizeof(set*))
-		exception("Array out range error", "add_set");
+		exception("Array out of range error", "add_set");
 
 	return sets_num - 1;
 }
@@ -246,6 +257,7 @@ void sets()
 	*/
 	set* begin = (set*)malloc(sizeof(set));
 	begin->kernel_num = 1;
+	begin->transfer_table = (int*)calloc(transfer_index, sizeof(int));
 	begin->pro_list = (n_pro*)malloc(sizeof(n_pro));
 	begin->pro_list->body = (int*)calloc(BODY_LENGTH, sizeof(int));
 	begin->pro_list->body[0] = token_num + 1;
@@ -281,12 +293,120 @@ void sets()
 }
 
 
-void yacc_init(char *file_path)
+void name_record()
+{
+	int type;
+	void *p = NULL;
+	name_record_arr = (char**)malloc(transfer_index*sizeof(char*));
+	for (int i = 0; i < transfer_index; i++)
+	{
+		*(name_record_arr + i) = (char*)malloc(20 * sizeof(char));
+		p = find_by_index(i, &type);
+		if (type == TOKEN)
+			strcpy(*(name_record_arr + i), ((element*)p)->terminator_name);
+		else if (type == PRODUCTION)
+			strcpy(*(name_record_arr + i), ((production*)p)->head);
+	}
+	mem_release();
+}
+
+
+void yacc_init(char *grammar_file_path, char *regex_file_path, char *code_file_path)
 {
 	FILE *fp = NULL;
-	if (!(fp = fopen(file_path, "r")))
+	if (!(fp = fopen(grammar_file_path, "r")))
 		exception("Failed to open the file.", NULL);
 	grammar_load(fp);
 	fclose(fp);
 	sets();
+	name_record();
+	lex_ini(regex_file_path, code_file_path);
+}
+
+int get_index(char *token_name)
+{
+	for (int i = 0; i < transfer_index; i++)
+	{
+		if (!strcmp(token_name, *(name_record_arr + i)))
+			return i;
+	}
+	return -1;
+}
+
+
+
+struct state
+{
+	int arr[100];
+	int top;
+}state_stack;
+lexeme lex;
+void yacc_analyze()
+{
+	n_pro *p = NULL;
+	int yacc_state = 0;
+	int token_index;
+	//Used when temp==0
+	int a[20];
+	int i = 0;
+
+	state_stack.top = 1;
+	int temp;
+
+	int load = 1;
+
+	state_stack.arr[0] = yacc_state;
+	while (1)
+	{
+		if (load)
+		{
+			get_next_token(&lex);
+			printf("Match:<%s,%s>\n", lex.lexeme_name, lex.token_name);
+		} else
+			load = 1;
+		token_index = get_index(lex.token_name);
+		yacc_state = state_stack.arr[state_stack.top - 1];
+		temp = sets_arr[yacc_state]->transfer_table[token_index];
+		if (temp == 0)
+		{
+			printf("line:%d,lexme:%s\n", lex_lines, lex.lexeme_name);
+			printf("Suppose to be a(an) ");
+			for (int j = 0; j < transfer_index; j++)
+			{
+				temp = sets_arr[yacc_state]->transfer_table[j];
+				if (temp != 0)
+				{
+					a[i] = j;
+					i++;
+				}
+			}
+			for (int j = 0; j < i; j++)
+			{
+				if (j == i - 1)
+					printf("%s", name_record_arr[a[j]]);
+				else
+					printf("%s or ", name_record_arr[a[j]]);
+			}
+			putchar(10);
+			exception("Analysis error.", "yacc_analyze");
+		} else if (temp == 1)
+		{
+			printf("Analysis completed.The code fits the grammar.\n");
+			return;
+		} else if (temp < 0)
+		{
+			temp = -temp;
+			p = sets_arr[yacc_state]->pro_list;
+			for (int i = 0; i < temp - 1; i++, p = p->next);
+			printf("Reduce to %s.\n", name_record_arr[p->head]);
+			state_stack.top = state_stack.top - p->body_len;
+			yacc_state = sets_arr[state_stack.arr[state_stack.top - 1]]->transfer_table[p->head] - 2;
+			state_stack.arr[state_stack.top++] = yacc_state;
+			load = 0;
+		} else
+		{
+			printf("Shift in.\n");
+			state_stack.arr[state_stack.top++] = temp - 2;
+		}
+	}
 }

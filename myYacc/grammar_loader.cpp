@@ -4,6 +4,7 @@ production *pro_list = NULL;
 
 //Recording the elements that are created.
 element *token_list = NULL;
+//The num of tokens and also the index of S'
 int token_num = 0;
 
 
@@ -321,7 +322,9 @@ element* elements_analyze()
 int advance()
 {
 	int i = 0;
-	for (; (file_buff[file_ptr] >= '0' && file_buff[file_ptr] <= '9') || (file_buff[file_ptr] >= 'a' && file_buff[file_ptr] <= 'z') || (file_buff[file_ptr] >= 'A' && file_buff[file_ptr] <= 'Z') || file_buff[file_ptr] == '_'; i++, file_ptr++)
+	for (; !(file_buff[file_ptr] >= 0 && file_buff[file_ptr] <= 32) && file_buff[file_ptr] != 127 && file_buff[file_ptr] != '%'
+		 &&file_buff[file_ptr] != ':'&&file_buff[file_ptr] != ';'&&file_buff[file_ptr] != '{'&&file_buff[file_ptr] != '}'
+		 &&file_buff[file_ptr] != '|'; i++, file_ptr++)
 	{
 		current_str[i] = file_buff[file_ptr];
 	}
