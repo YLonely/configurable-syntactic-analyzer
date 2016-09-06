@@ -121,7 +121,7 @@ set* closure(set *se)
 				temp = (n_pro*)malloc(sizeof(n_pro));
 				temp->head = first_p->body[first_p->dot_pos];
 				temp->body = (int*)malloc(BODY_LENGTH*sizeof(int));
-				memcpy(temp->body, t->body, BODY_LENGTH);
+				memcpy(temp->body, t->body, BODY_LENGTH*sizeof(int));
 				temp->body_len = t->body_len;
 				temp->dot_pos = 0;
 				temp->look_ahead = first_arr[i];
@@ -307,7 +307,7 @@ void name_record()
 		else if (type == PRODUCTION)
 			strcpy(*(name_record_arr + i), ((production*)p)->head);
 	}
-	//mem_release();
+	mem_release();
 }
 
 
