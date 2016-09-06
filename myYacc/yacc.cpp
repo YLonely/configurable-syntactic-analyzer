@@ -120,7 +120,7 @@ set* closure(set *se)
 			{
 				temp = (n_pro*)malloc(sizeof(n_pro));
 				temp->head = first_p->body[first_p->dot_pos];
-				temp->body = (int*)calloc(BODY_LENGTH, sizeof(int));
+				temp->body = (int*)malloc(BODY_LENGTH*sizeof(int));
 				memcpy(temp->body, t->body, BODY_LENGTH);
 				temp->body_len = t->body_len;
 				temp->dot_pos = 0;
@@ -155,7 +155,7 @@ set* _goto(set *s, int symbol_index)
 	int kernel_num = 0;
 	for (; temp; temp = temp->next)
 	{
-		if (temp->body[temp->dot_pos] == symbol_index)
+		if (temp->body[temp->dot_pos] == symbol_index&&temp->dot_pos != temp->body_len)
 		{
 			if (!first)
 			{
@@ -271,7 +271,7 @@ void sets()
 	for (int i = 0; i < sets_num; i++)
 	{
 		closure_s = closure(sets_arr[i]);
-		for (int j = 1; j < transfer_index; j++)
+		for (int j = 0; j < transfer_index; j++)
 		{
 			goto_s = _goto(closure_s, j);
 			if (!goto_s)
@@ -307,7 +307,7 @@ void name_record()
 		else if (type == PRODUCTION)
 			strcpy(*(name_record_arr + i), ((production*)p)->head);
 	}
-	mem_release();
+	//mem_release();
 }
 
 
@@ -367,8 +367,15 @@ void yacc_analyze()
 		token_index = get_index(lex.token_name);
 		yacc_state = state_stack.arr[state_stack.top - 1];
 		temp = sets_arr[yacc_state]->transfer_table[token_index];
+	L:
 		if (temp == 0)
 		{
+			if (temp = sets_arr[yacc_state]->transfer_table[0])
+			{
+				printf("Try empty string.\n");
+				load = 0;
+				goto L;
+			}
 			printf("line:%d,lexme:%s\n", lex_lines, lex.lexeme_name);
 			printf("Suppose to be a(an) ");
 			for (int j = 0; j < transfer_index; j++)

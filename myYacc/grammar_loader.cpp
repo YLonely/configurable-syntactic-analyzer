@@ -238,7 +238,7 @@ item* items_analyze()
 	while (TRUE)
 	{
 		temp->ele = elements_analyze();
-		temp->body = (int*)calloc(20, sizeof(int));
+		temp->body = (int*)calloc(BODY_LENGTH, sizeof(int));
 		item_body_count(temp);
 		if (match("|"))
 		{
